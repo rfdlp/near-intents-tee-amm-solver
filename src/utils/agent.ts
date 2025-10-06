@@ -58,12 +58,11 @@ export async function deriveWorkerAccount(hash?: Buffer | undefined) {
       const randomString = Buffer.from(randomArray).toString('hex');
       const keyFromTee = (await client.getKey(randomString)).key;
       // hash of in-memory and TEE entropy
-      hash = Buffer.from(
-        await crypto.subtle.digest('SHA-256', Buffer.concat([randomArray, keyFromTee.slice(0, 32)])),
-      );
+      hash = Buffer.from(await crypto.subtle.digest('SHA-256', Buffer.concat([randomArray, keyFromTee.slice(0, 32)])));
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       console.error('WARNING: NOT RUNNING IN TEE. Generate an in-memory key pair.');
+      console.log('StackTrace', e);
       // hash of in-memory ONLY
       hash = Buffer.from(await crypto.subtle.digest('SHA-256', randomArray));
     }
@@ -114,10 +113,13 @@ function createReportData(publicKey: string): Uint8Array {
   return reportData;
 }
 
-export async function getQuote(client: DstackClient, reportData: string | Buffer | Uint8Array): Promise<{
-  quote_hex: string,
-  checksum: string,
-  quote_collateral: unknown
+export async function getQuote(
+  client: DstackClient,
+  reportData: string | Buffer | Uint8Array,
+): Promise<{
+  quote_hex: string;
+  checksum: string;
+  quote_collateral: unknown;
 }> {
   // get TDX quote
   const ra = await client.getQuote(reportData);
@@ -139,7 +141,7 @@ export async function getQuote(client: DstackClient, reportData: string | Buffer
     quote_hex,
     checksum: result.checksum,
     quote_collateral: result.quote_collateral,
-  }
+  };
 }
 
 /**
@@ -171,7 +173,7 @@ export async function registerWorker(account: Account, publicKey: string): Promi
       checksum,
       tcb_info,
     },
-    attachedDeposit: BigInt(1),   // 1 yocto NEAR
+    attachedDeposit: BigInt(1), // 1 yocto NEAR
     gas: BigInt(300000000000000), // 300 Tgas
   });
 }
